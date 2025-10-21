@@ -131,7 +131,7 @@ class SelfAttention(nn.Module):
         v = self.value(x).view(bsz, -1, nh, nd).transpose(1, 2)
 
         if self.flash:
-            att = F.scaled_dot_product_attention(
+            y = F.scaled_dot_product_attention(
                 q,
                 k,
                 v,
@@ -146,7 +146,7 @@ class SelfAttention(nn.Module):
             y = torch.matmul(att, v) # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
 
         # re-assemble all head outputs side by side
-        y = att.transpose(1, 2).contiguous().view(bsz, -1, self.all_head_size)
+        y = y.transpose(1, 2).contiguous().view(bsz, -1, self.all_head_size)
 
         # output projection will be performed later
         return y
