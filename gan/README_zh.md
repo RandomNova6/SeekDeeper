@@ -2,28 +2,28 @@
 
 ## 介绍
 
-在这个项目中，我实现了三种著名的生成式对抗网络（GAN）：GAN、DCGAN 和 WGAN-GP。我在 MNIST 和 CIFAR10 数据集上分别训练并测试了这些模型。以下是结果展示。
+在本项目中，我们实现了三种具有代表性的生成式对抗网络（GAN）：GAN、DCGAN 和 WGAN-GP。我们分别在 MNIST 和 CIFAR10 数据集上训练并评估这些模型，生成结果如下所示。
 
 <div align="center">
   <h3>在 MNIST 数据集上训练并生成的结果</h3>
   <table>
     <tr>
       <td>
-        <img src="./images/mnist_real.png" alt="真实图像" width="200"/>
+        <img src="./assets/mnist_real.png" alt="真实图像" width="200"/>
         <p align="center">真实图像</p>
       </td>
       <td>
-        <img src="./images/mnist_gan.png" alt="GAN 生成的 MNIST 图像" width="200"/>
+        <img src="./assets/mnist_gan.png" alt="GAN 生成的 MNIST 图像" width="200"/>
         <p align="center">GAN</p>
       </td>
     </tr>
     <tr>
       <td>
-        <img src="./images/mnist_dcgan.png" alt="DCGAN 生成的 MNIST 图像" width="200"/>
+        <img src="./assets/mnist_dcgan.png" alt="DCGAN 生成的 MNIST 图像" width="200"/>
         <p align="center">DCGAN</p>
       </td>
       <td>
-        <img src="./images/mnist_wgan.png" alt="WGAN-GP 生成的 MNIST 图像" width="200"/>
+        <img src="./assets/mnist_wgan.png" alt="WGAN-GP 生成的 MNIST 图像" width="200"/>
         <p align="center">WGAN-GP</p>
       </td>
     </tr>
@@ -35,21 +35,21 @@
   <table>
     <tr>
       <td>
-        <img src="./images/cifar_real.png" alt="真实图像" width="200"/>
+        <img src="./assets/cifar_real.png" alt="真实图像" width="200"/>
         <p align="center">真实图像</p>
       </td>
       <td>
-        <img src="./images/cifar_gan.png" alt="GAN 生成的 CIFAR10 图像" width="200"/>
+        <img src="./assets/cifar_gan.png" alt="GAN 生成的 CIFAR10 图像" width="200"/>
         <p align="center">GAN</p>
       </td>
     </tr>
     <tr>
       <td>
-        <img src="./images/cifar_dcgan.png" alt="DCGAN 生成的 CIFAR10 图像" width="200"/>
+        <img src="./assets/cifar_dcgan.png" alt="DCGAN 生成的 CIFAR10 图像" width="200"/>
         <p align="center">DCGAN</p>
       </td>
       <td>
-        <img src="./images/cifar_wgan.png" alt="WGAN-GP 生成的 CIFAR10 图像" width="200"/>
+        <img src="./assets/cifar_wgan.png" alt="WGAN-GP 生成的 CIFAR10 图像" width="200"/>
         <p align="center">WGAN-GP</p>
       </td>
     </tr>
@@ -230,6 +230,5 @@ K\cdot W(P_r,P_g)\approx\max_{w:|f_w|_L\leq K}\mathbb{E}_{x\sim P_r}[f_w(x)]-\ma
 #### 训练策略
 相比原始GAN的训练流程，主要有以下几点改变：
 1. WGAN使用的是`RMSProp`、`SGD`这样的优化器，而WGAN-GP建议使用`Adam`优化器并设 $\beta=(0, 0.9)$。
-2. 如果要在判别器中使用layer norm，给优化器设置`1e-3`的权重衰减会有一些提升。
+2. 当判别器中使用 layer norm 时，将优化器的权重衰减设置为 `1e-3` 可能带来一定性能提升。
 3. 每训练五次判别器再训练一次生成器。
-

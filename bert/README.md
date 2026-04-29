@@ -29,11 +29,11 @@ Target Sequence :                  the                his
 
 ##### Rules:
 
-Randomly 15% of input token will be changed into something, based on under sub-rules
+For each input sequence, 15% of the tokens are randomly selected and transformed according to the following rules:
 
-1. Randomly 80% of tokens, gonna be a `[MASK]` token 
-2. Randomly 10% of tokens, gonna be a `[RANDOM]` token(another word)
-3. Randomly 10% of tokens, will be remain as same. But need to be predicted.
+1. 80% of the selected tokens are replaced with the `[MASK]` token.
+2. 10% of the selected tokens are replaced with a random token.
+3. 10% of the selected tokens remain unchanged but are still included in the prediction objective.
 
 #### Next Sentence Prediction(NSP)
 
@@ -47,12 +47,12 @@ Input = [CLS] the man heading to the store [SEP] penguin [MASK] are flight ##les
 Label = NotNext
 ```
 
-This is for understanding the relationship between two text sentences, which is not directly captured by language modeling.
+This objective is designed to model the relationship between two text segments, which is not directly captured by standard language modeling.
 
 ##### Rules:
 
-1. Randomly 50% of next sentence, gonna be continuous sentence.
-2. Randomly 50% of next sentence, gonna be unrelated sentence.
+1. In 50% of the samples, the second sentence is the actual continuation of the first sentence.
+2. In the remaining 50% of the samples, the second sentence is sampled from an unrelated context.
 
 
 
@@ -80,7 +80,5 @@ Run the following command in the terminal:
 
 ```bash
 pip install -U huggingface-cli
-export HF_ENDPOINT=https://hf-mirror.com
 huggingface-cli download bert-base-uncased --local-dir path/to/pretrained_dir
 ```
-

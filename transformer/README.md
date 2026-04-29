@@ -1,12 +1,12 @@
-[```📖中文 ReadMe\]](./README_zh.md)
+[📖中文 ReadMe](./README_zh.md)
 ## Introduction
-Here, I have implemented a Transformer and used it for an English-to-German translation task on the IWSLT 2017 dataset (see [here](./train.ipynb)). After training the model, you can load the model and perform inference [here](./inference.ipynb).
+In this project, we implement a Transformer model and apply it to the English-to-German translation task on the IWSLT 2017 dataset (see [train.ipynb](./train.ipynb)). After training, the model can be loaded for inference in [inference.ipynb](./inference.ipynb).
 
 ## Model details
 ### [Transformer](./modules/transformer.py)
 The Transformer was initially proposed for translation tasks. If we aim to translate from Chinese to English, we refer to Chinese as the source language and English as the target language. The structure of the Transformer is shown in the figure below. The embedding of the source text is added to the positional encoding and fed into the Encoder. After passing through N layers of Encoder layers, the output interacts in the cross-attention of the Decoder. Similarly, the embedding of the target text is added to the positional encoding and fed into the Decoder. The output of the Decoder typically passes through a linear layer (depending on the task requirements).
 <div style="text-align: center;">
-  <img src="./images/transformer.png" alt="Transformer" style="width: 300px; height: auto;">
+  <img src="./assets/transformer.png" alt="Transformer" style="width: 300px; height: auto;">
 </div>
 
 The Encoder and Decoder use two types of masks, `src_mask` and `tgt_mask`. `src_mask` is used to mask all PAD tokens to prevent them from affecting the attention calculation. `tgt_mask` masks all PAD tokens and prevents the model from accessing future words during next word prediction.
@@ -48,7 +48,7 @@ x = layer_norm(x + residual)
 ## [Attention](./modules/layers.py)
 The attention calculation process is as follows:
 <div style="text-align: center;">
-  <img src="./images/attention.png" alt="Attention" style="width: 400px; height: auto;">
+  <img src="./assets/attention.png" alt="Attention" style="width: 400px; height: auto;">
 </div>
 In the Encoder's self-attention, K, Q, and V are obtained from the output of the previous layer through different linear layers. In the Decoder's cross-attention, K and V come from the output of the last layer of the Encoder, while Q is the output of the previous layer of the Decoder.
 
@@ -106,7 +106,7 @@ lrate=d_{\mathrm{model}}^{-0.5}\cdot\min(step\_ num^{-0.5},step\_ num\cdot warmu
 
 This means linearly increasing the learning rate in the first $warmup_steps$ training steps, then decreasing it proportionally to the inverse square root of the step number. The base transformer was trained for 100,000 steps, with $warmup\_ steps = 4000$ under this setting. The visualization of learning rate is shown as below
 <div style="text-align: center;">
-  <img src="./images/lr.png" alt="Transformer" style="width: 500px; height: auto;">
+  <img src="./assets/lr.png" alt="Transformer" style="width: 500px; height: auto;">
 </div>
 
 
@@ -121,9 +121,9 @@ y_{\text{smooth}} = (1 - \epsilon) \cdot y_{\text{one-hot}} + (1-y_{\text{one-ho
 
 where $\epsilon$ is the smoothing parameter, defaulting to 0.1. $y_{\text{one-hot}}$ is the original one-hot label.
 
-You can modify `eps_ls` in [config.py](./config.py) to control the value of $\epsilon$. If $\epsilon=0$, label smoothing is disabled, and cross-entropy is used as the loss function.
+The value of $\epsilon$ can be controlled by modifying `eps_ls` in [config.py](./config.py). If $\epsilon=0$, label smoothing is disabled and cross-entropy is used as the loss function.
 
 ## Evaluation
 To evaluate the effectiveness of the machine translation, this implementation follows the setup from [Attention is all you need](https://arxiv.org/pdf/1706.03762) and uses the [BLEU](https://aclanthology.org/P02-1040.pdf) score. The specific process involves passing the source and target languages through the forward process of the transformer, then using greedy decode to select the token with the highest probability from the decoder output as the prediction. The BLEU score is then calculated using [sacrebleu](https://github.com/mjpost/sacrebleu).
 
-To further improve the translation quality, beam search can be used as the decode method, and contributions are welcome :) .
+To further improve translation quality, beam search can be used as the decoding method.

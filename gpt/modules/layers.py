@@ -1,8 +1,5 @@
-import math
-
 import torch
 import torch.nn as nn
-from torch.nn import functional as F
 
 
 class Attention(nn.Module):
@@ -14,13 +11,10 @@ class Attention(nn.Module):
         # output projection
         self.c_proj = nn.Linear(hidden_size, hidden_size)
         # regularization
-        self.attn_dropout = nn.Dropout(dropout)
         self.resid_dropout = nn.Dropout(dropout)
         self.num_attention_heads = num_attention_heads
         self.hidden_size = hidden_size
         self.dropout_prob = dropout
-        # flash attention make GPU go brrrrr but support is only in PyTorch >= 2.0
-        self.flash = hasattr(torch.nn.functional, "scaled_dot_product_attention")
         # causal mask to ensure that attention is only applied to the left in the input sequence
         self.register_buffer(
             "bias",
@@ -56,22 +50,13 @@ class Attention(nn.Module):
         casual_mask = self.bias[:, :, :T, :T]
         if mask is not None:
             casual_mask = casual_mask & mask
-        if self.flash:
-            # efficient attention using Flash Attention CUDA kernels
-            y = F.scaled_dot_product_attention(
-                q,
-                k,
-                v,
-                attn_mask=casual_mask,
-                dropout_p=self.dropout_prob if self.training else 0,
-            )
-        else:
-            # manual implementation of attention
-            att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-            att = att.masked_fill(casual_mask == 0, float("-inf"))
-            att = F.softmax(att, dim=-1)
-            att = self.attn_dropout(att)
-            y = att @ v  # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+        y = torch.nn.functional.scaled_dot_product_attention(
+            q,
+            k,
+            v,
+            attn_mask=casual_mask,
+            dropout_p=self.dropout_prob if self.training else 0,
+        )
         y = (
             y.transpose(1, 2).contiguous().view(B, T, C)
         )  # re-assemble all head outputs side by side

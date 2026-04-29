@@ -1,8 +1,7 @@
 import inspect
-
 import torch
 import torch.nn as nn
-from torch.nn import functional as F
+import torch.nn.functional as F
 
 from .layers import Block
 

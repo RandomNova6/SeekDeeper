@@ -1,6 +1,6 @@
-from typing import Sequence
 from torch.utils.data import DataLoader, random_split
 from torchvision import datasets, transforms
+
 import config
 
 
@@ -74,7 +74,7 @@ def _load_cifar10(num_proc, splits, **kwargs):
 def load_data(
     name: str,
     num_proc: int = 1,
-    splits: Sequence[str] = None,
+    splits: list[str] | None = None,
     **kwargs,
 ):
     dispatch = {

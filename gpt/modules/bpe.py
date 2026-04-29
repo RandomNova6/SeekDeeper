@@ -5,12 +5,11 @@ occuring characters. This implementation is based on openai's gpt text_utils.py:
 https://github.com/openai/finetune-transformer-lm/blob/master/text_utils.py
 """
 
-import re
-from typing import List, Optional, Union
-import ftfy
 import json
-import spacy
+import re
 
+import ftfy
+import spacy
 from tqdm import tqdm
 
 
@@ -73,7 +72,7 @@ class BPETokenizer(object):
         self.cache = {}
         self.special_tokens = {"</w>"}
 
-    def add_special_tokens(self, new_tokens: List[str]):
+    def add_special_tokens(self, new_tokens: list[str]):
         start_idx = len(self.encoder)
 
         for i, token in enumerate(new_tokens):
@@ -149,9 +148,9 @@ class BPETokenizer(object):
 
     def encode(
         self,
-        texts: Union[str, List[str]],
+        texts: str | list[str],
         verbose: bool = True,
-    ) -> List[List[int]]:
+    ) -> list[list[int]]:
         if not isinstance(texts, list):
             texts = [texts]
 
@@ -173,7 +172,7 @@ class BPETokenizer(object):
         return texts_tokens
 
     def decode(
-        self, bpe_idx: Union[List[List[int]], List[int]], skip_special_tokens=True
+        self, bpe_idx: list[list[int]] | list[int], skip_special_tokens=True
     ):
         """lists of integers comes in, a list of string comes out"""
         if not isinstance(bpe_idx[0], list):

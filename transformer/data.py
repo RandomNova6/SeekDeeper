@@ -1,15 +1,16 @@
 import os
+
+import datasets
 import torch
-from torch.utils.data import DataLoader
 import torch.nn.functional as F
-import config
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
-from tokenizers.trainers import BpeTrainer
 from tokenizers.pre_tokenizers import Whitespace
 from tokenizers.processors import TemplateProcessing
-import datasets
-from typing import Sequence, Optional
+from tokenizers.trainers import BpeTrainer
+from torch.utils.data import DataLoader
+
+import config
 
 SOS_TOKEN = "[SOS]"
 EOS_TOKEN = "[EOS]"
@@ -53,9 +54,7 @@ def build_tokenizer(dataset, lang, force_reload):
     return tokenizer
 
 
-def load_data(
-    src_lang, tgt_lang, splits: Optional[Sequence[str]] = None, force_reload=False
-):
+def load_data(src_lang, tgt_lang, splits: list[str] | None = None, force_reload=False):
     """
     Load IWSLT 2017 dataset..
     Args:

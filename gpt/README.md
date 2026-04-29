@@ -1,6 +1,6 @@
 [📖中文 ReadMe](./README_zh.md)
 ## Introduction  
-In this GPT implementation, I will demonstrate how to pre-train on the [BookCorpus](https://huggingface.co/datasets/bookcorpus/bookcorpus) dataset, then load the official pre-trained weights from [huggingface](https://huggingface.co/openai-community/openai-gpt) into our model, fine-tune on the [Stanford Sentiment Treebank (SST-2)](https://nlp.stanford.edu/~socherr/EMNLP2013_RNTN.pdf) dataset, and replicate the results mentioned in the paper.
+In this GPT implementation, we demonstrate how to pre-train on the [BookCorpus](https://huggingface.co/datasets/bookcorpus/bookcorpus) dataset, load the official pre-trained weights from [Hugging Face](https://huggingface.co/openai-community/openai-gpt) into our model, fine-tune on the [Stanford Sentiment Treebank (SST-2)](https://nlp.stanford.edu/~socherr/EMNLP2013_RNTN.pdf) dataset, and reproduce the results reported in the original paper.
 
 ## Model details  
 ### Key differences with vanilla transformer  
@@ -70,7 +70,7 @@ The summary is shown in the table below:
 ### [Byte-pair encoding (BPE)](./modules/bpe.py)  
 BPE is a tokenization method where the core idea is to merge the most frequently occurring character pairs to construct larger subword units, thereby reducing the vocabulary size and handling the problem of rare words. It requires training on a corpus to obtain a vocabulary before encoding and decoding can take place.
 
-Since the [BookCorpus](https://huggingface.co/datasets/bookcorpus/bookcorpus) dataset provided by Huggingface has been meticulously post-processed, we cannot fully replicate the results of the [original GPT code](https://github.com/openai/finetune-transformer-lm). I have only implemented the encoding and decoding parts based on the original implementation in [text_utils.py](https://github.com/openai/finetune-transformer-lm/blob/master/text_utils.py). If you're interested in the BPE training process, you can refer to Karpathy's [minbpe](https://github.com/karpathy/minbpe).
+Because the [BookCorpus](https://huggingface.co/datasets/bookcorpus/bookcorpus) dataset provided by Hugging Face has undergone substantial post-processing, the results of the [original GPT code](https://github.com/openai/finetune-transformer-lm) cannot be reproduced exactly. We implement the encoding and decoding components based on the original implementation in [text_utils.py](https://github.com/openai/finetune-transformer-lm/blob/master/text_utils.py). For further details on BPE training, Karpathy's [minbpe](https://github.com/karpathy/minbpe) provides a useful reference.
 
 #### Training  
 1. Pre-tokenization: Use [`ftfy`](https://github.com/rspeer/python-ftfy) to normalize Unicode characters, unify non-standard punctuation, replace all whitespace characters with `\n`, and then tokenize using spacy's [en_core_web_sm](https://spacy.io/models/en#en_core_web_sm) model (see [bpe.py](./modules/bpe.py)).  
@@ -95,13 +95,13 @@ Since the [BookCorpus](https://huggingface.co/datasets/bookcorpus/bookcorpus) da
 ## [Pre-training](./pretrain.ipynb)  
 Based on the setup in [Improving Language Understanding by Generative Pre-Training](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf) Sec. 4.1, we use AdamW ($w = 0.01, \text{max-lr} = 2.4\times 10^{-4}$) as the optimizer on the BooksCorpus dataset. Note: **no weight decay is applied to the parameters in bias and scaling layers (`LayerNorm`)**. The learning rate is linearly increased from 0 over 2000 steps to $\text{max-lr}$, followed by a cosine annealing learning rate schedule. The model is trained for 100 epochs on randomly sampled minibatches of 64 continuous sequences of 512 tokens each.
 
-To sample the specified number of continuous token sequences, we need to first convert the text in the original dataset to token ids using bpe. However, our custom tokenization implementation is very slow, so experiments are conducted on a small portion of the dataset. If you wish to try more data, you can modify the `loading_ratio` parameter in `load_data` within [pretrain.ipynb](./pretrain.ipynb).
+To sample the specified number of continuous token sequences, the text in the original dataset must first be converted into token ids using BPE. Since our custom tokenization implementation is computationally expensive, the experiments are conducted on a subset of the dataset. The `loading_ratio` parameter in `load_data` within [pretrain.ipynb](./pretrain.ipynb) can be adjusted to use a larger data subset.
 
 ## [Fine-tuning](./finetune.ipynb)  
 After training on the BookCorpus dataset, GPT has gained a certain level of language ability. To apply it to a new dataset, only minor adjustments to the model structure and input are needed.
 
 <div>  
-  <img src="./images/gpt-train.png" alt="GPT architecture and training objectives used in other works" style="width: 100%; height: auto;">  
+  <img src="./assets/gpt-train.png" alt="GPT architecture and training objectives used in other works" style="width: 100%; height: auto;">  
 </div>
 
 In Sec. 3.2 of the original paper, it is mentioned that adding a language modeling loss as an auxiliary objective during fine-tuning helps learning because (a) it improves the generalization ability of the supervised model, and (b) it accelerates convergence. Therefore, in addition to adding new tokens (`<start>`, and `<extract>`) to the vocabulary, the output of the decoder backbone needs to be fed into a newly added classification head.
@@ -113,6 +113,5 @@ Fine-tuning generally reuses the hyperparameter settings from pre-training. A dr
 Run the following command in the terminal  
 ```bash  
 pip install -U huggingface-cli  
-export HF_ENDPOINT=https://hf-mirror.com  
 huggingface-cli download openai-community/openai-gpt --local-dir path/to/pretrained_dir  
 ```

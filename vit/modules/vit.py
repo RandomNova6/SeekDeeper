@@ -1,6 +1,3 @@
-import os
-from typing import Union
-
 import torch
 import torch.nn as nn
 
@@ -43,7 +40,7 @@ class ViTModel(nn.Module):
         encoded_output = self.encoder(hidden_states)
         return self.layernorm(encoded_output)
 
-    def _init_weights(self, module: Union[nn.Linear, nn.Conv2d, nn.LayerNorm]) -> None:
+    def _init_weights(self, module: nn.Linear | nn.Conv2d | nn.LayerNorm) -> None:
         """Initialize the weights"""
         if isinstance(module, (nn.Linear, nn.Conv2d)):
             # Upcast the input in `fp32` and cast it back to desired `dtype` to avoid

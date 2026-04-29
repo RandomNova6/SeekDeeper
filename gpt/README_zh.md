@@ -1,6 +1,6 @@
 [📖 English ReadMe](./README.md)  
 ## Introduction  
-在这个 GPT 的实现中，我将展示如何在 [BookCorpus](https://huggingface.co/datasets/bookcorpus/bookcorpus) 数据集上进行预训练，然后从 [huggingface](https://huggingface.co/openai-community/openai-gpt) 上加载官方的预训练权重到我们的模型中，在 [Stanford Sentiment Treebank (SST-2)](https://nlp.stanford.edu/~socherr/EMNLP2013_RNTN.pdf) 数据集上进行微调，并复现论文中提到的效果。
+在本 GPT 实现中，我们展示如何在 [BookCorpus](https://huggingface.co/datasets/bookcorpus/bookcorpus) 数据集上进行预训练，随后从 [Hugging Face](https://huggingface.co/openai-community/openai-gpt) 加载官方预训练权重到我们的模型中，并在 [Stanford Sentiment Treebank (SST-2)](https://nlp.stanford.edu/~socherr/EMNLP2013_RNTN.pdf) 数据集上进行微调，以复现论文报告的实验结果。
 
 ## Model details  
 ### Key differences with vanilla transformer  
@@ -70,7 +70,7 @@
 ### [Byte-pair encoding (BPE)](./modules/bpe.py)  
 BPE 是一种 tokenize 的方法，其核心思想是通过合并最频繁出现的字符对来构建更大的子词单元，从而减少词汇表的大小，处理稀有词问题。它需要先在一个语料库上进行训练，得到词表后才能进行编码和解码。
 
-由于 Huggingface 提供的 [BookCorpus](https://huggingface.co/datasets/bookcorpus/bookcorpus) 数据集已经经过了细致的后处理，因此我们无法完全复现出 [原始 GPT 代码](https://github.com/openai/finetune-transformer-lm) 的结果。我仅基于原始实现 [text_utils.py](https://github.com/openai/finetune-transformer-lm/blob/master/text_utils.py) 完成了编码和解码部分的工作。如果你对 BPE 的训练流程感兴趣，可以参考 Karpathy 的 [minbpe](https://github.com/karpathy/minbpe)。
+由于 Hugging Face 提供的 [BookCorpus](https://huggingface.co/datasets/bookcorpus/bookcorpus) 数据集已经经过较为充分的后处理，因此我们无法完全复现 [原始 GPT 代码](https://github.com/openai/finetune-transformer-lm) 的结果。我们基于原始实现 [text_utils.py](https://github.com/openai/finetune-transformer-lm/blob/master/text_utils.py) 完成编码与解码部分。关于 BPE 训练流程的更多细节，可参考 Karpathy 的 [minbpe](https://github.com/karpathy/minbpe)。
 
 #### Training  
 1. 预分词：用 [`ftfy`](https://github.com/rspeer/python-ftfy) 规范化 Unicode 字符，把非标准标点统一，并替换所有的空白字符为 `\n`，然后使用 spacy 的 [en_core_web_sm](https://spacy.io/models/en#en_core_web_sm) 模型进行分词（见 [bpe.py](./modules/bpe.py)）。  
@@ -95,13 +95,13 @@ BPE 是一种 tokenize 的方法，其核心思想是通过合并最频繁出现
 ## [Pre-training](./pretrain.ipynb)  
 根据 [Improving Language Understanding by Generative Pre-Training](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf) Sec. 4.1 的设置，在 BooksCorpus 数据集上，使用 AdamW ($w = 0.01, \text{max-lr} = 2.4\times 10^{-4}$) 作为优化器，注意：所有 **偏置和缩放层（`LayerNorm`）的参数权重不会应用权重衰减**。使用先使学习率从 0 分 2000 步线性增加到 $\text{max-lr}$，而后余弦退火的学习率调整策略，对随机采样的 64 个连续 512 个 token sequences 的 minibatch 进行 100 个 epoch 的训练。
 
-为了采样连续指定数量的 token sequence，我们需要先用 bpe 把原数据集的文本转换为 token id。而我们自己实现的 tokenize 速度非常慢，因此只能在小部分数据集上进行实验。如果你想要尝试更多的数据，可以修改 [pretrain.ipynb](./pretrain.ipynb) 中 `load_data` 的 `loading_ratio` 参数。
+为了采样指定数量的连续 token sequence，需要先使用 BPE 将原始数据集文本转换为 token id。由于我们自定义实现的 tokenization 过程计算开销较大，因此实验仅在数据集子集上进行。如需使用更大规模的数据，可调整 [pretrain.ipynb](./pretrain.ipynb) 中 `load_data` 的 `loading_ratio` 参数。
 
 ## [Fine-tuning](./finetune.ipynb)  
-在 BookCorpus 数据集上与训练后，GPT 已经获得了一定的语言能力，要将其运用到新的数据集上，只需要略微调整一下模型结构和输入即可。
+在 BookCorpus 数据集上预训练后，GPT 已经获得一定的语言建模能力。将其迁移至新的数据集时，仅需对模型结构和输入格式进行少量调整。
 
 <div>  
-  <img src="./images/gpt-train.png" alt="GPT architecture and training objectives used in other works" style="width: 100%; height: auto;">  
+  <img src="./assets/gpt-train.png" alt="GPT architecture and training objectives used in other works" style="width: 100%; height: auto;">  
 </div>
 
 原论文中 Sec. 3.2 提到，添加 language modelling loss 作为微调的辅助目标有助于学习，因为 (a) 可以提高监督模型的泛化能力，(b) 可以加速收敛。因此除了要向词表中添加一些新的 tokens（`<start>` 和 `<extract>`）之外，还需把 decoder 骨干的输出输入到一个新增的分类头中。
@@ -113,6 +113,5 @@ BPE 是一种 tokenize 的方法，其核心思想是通过合并最频繁出现
 在命令行运行以下指令  
 ```bash  
 pip install -U huggingface-cli  
-export HF_ENDPOINT=https://hf-mirror.com  
 huggingface-cli download openai-community/openai-gpt --local-dir path/to/pretrained_dir  
 ```

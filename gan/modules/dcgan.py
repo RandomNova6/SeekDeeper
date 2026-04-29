@@ -1,4 +1,5 @@
 import torch.nn as nn
+
 from .gan_base import GANBase
 
 

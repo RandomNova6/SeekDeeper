@@ -1,0 +1,7 @@
+torch
+datasets
+tokenizers
+python-dotenv
+tqdm
+matplotlib
+sacrebleu

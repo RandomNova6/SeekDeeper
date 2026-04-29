@@ -2,28 +2,28 @@
 
 ## Introduction
 
-In this project, I implemented three well-known Generative Adversarial Networks (GANs): GAN, DCGAN, and WGAN-GP. I trained and tested these models on the MNIST and CIFAR10 datasets. The results are displayed below.
+In this project, we implement three representative Generative Adversarial Network (GAN) variants: GAN, DCGAN, and WGAN-GP. We train and evaluate these models on the MNIST and CIFAR10 datasets. The generated samples are shown below.
 
 <div align="center">
   <h3>Results on MNIST Dataset</h3>
   <table>
     <tr>
       <td>
-        <img src="./images/mnist_real.png" alt="Real Images" width="200"/>
+        <img src="./assets/mnist_real.png" alt="Real Images" width="200"/>
         <p align="center">Real Images</p>
       </td>
       <td>
-        <img src="./images/mnist_gan.png" alt="GAN Generated MNIST Images" width="200"/>
+        <img src="./assets/mnist_gan.png" alt="GAN Generated MNIST Images" width="200"/>
         <p align="center">GAN</p>
       </td>
     </tr>
     <tr>
       <td>
-        <img src="./images/mnist_dcgan.png" alt="DCGAN Generated MNIST Images" width="200"/>
+        <img src="./assets/mnist_dcgan.png" alt="DCGAN Generated MNIST Images" width="200"/>
         <p align="center">DCGAN</p>
       </td>
       <td>
-        <img src="./images/mnist_wgan.png" alt="WGAN-GP Generated MNIST Images" width="200"/>
+        <img src="./assets/mnist_wgan.png" alt="WGAN-GP Generated MNIST Images" width="200"/>
         <p align="center">WGAN-GP</p>
       </td>
     </tr>
@@ -35,21 +35,21 @@ In this project, I implemented three well-known Generative Adversarial Networks 
   <table>
     <tr>
       <td>
-        <img src="./images/cifar_real.png" alt="Real Images" width="200"/>
+        <img src="./assets/cifar_real.png" alt="Real Images" width="200"/>
         <p align="center">Real Images</p>
       </td>
       <td>
-        <img src="./images/cifar_gan.png" alt="GAN Generated CIFAR10 Images" width="200"/>
+        <img src="./assets/cifar_gan.png" alt="GAN Generated CIFAR10 Images" width="200"/>
         <p align="center">GAN</p>
       </td>
     </tr>
     <tr>
       <td>
-        <img src="./images/cifar_dcgan.png" alt="DCGAN Generated CIFAR10 Images" width="200"/>
+        <img src="./assets/cifar_dcgan.png" alt="DCGAN Generated CIFAR10 Images" width="200"/>
         <p align="center">DCGAN</p>
       </td>
       <td>
-        <img src="./images/cifar_wgan.png" alt="WGAN-GP Generated CIFAR10 Images" width="200"/>
+        <img src="./assets/cifar_wgan.png" alt="WGAN-GP Generated CIFAR10 Images" width="200"/>
         <p align="center">WGAN-GP</p>
       </td>
     </tr>
@@ -232,5 +232,5 @@ Because the gradient penalty is applied independently to each input rather than 
 #### Training Strategy
 Compared with the original GAN ​​training process, there are several major changes:
 1. WGAN uses optimizers such as `RMSProp` and `SGD`, while WGAN-GP recommends using the `Adam` optimizer and setting $\beta=(0, 0.9)$.
-2. If you want to use layer norm in the discriminator, setting the weight decay of `1e-3` for the optimizer will have some improvement.
+2. When layer normalization is used in the discriminator, setting the optimizer weight decay to `1e-3` may improve performance.
 3. Train the generator once every five times the discriminator is trained.

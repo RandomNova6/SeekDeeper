@@ -1,7 +1,5 @@
 import torch
-from torch import nn
-import math
-import torch.nn.functional as F
+import torch.nn as nn
 
 
 class LayerNorm(nn.Module):
@@ -33,30 +31,9 @@ class LayerNorm(nn.Module):
 class ScaledDotProductAttention(nn.Module):
     def __init__(self):
         super(ScaledDotProductAttention, self).__init__()
-        self.flash = hasattr(F, "scaled_dot_product_attention")
 
     def forward(self, q, k, v, mask=None):
-        if self.flash:
-            out = F.scaled_dot_product_attention(q, k, v, mask)
-        else:
-            # calculate attention manually
-            batch_size, num_attention_heads, seq_len, d_key = k.size()
-
-            # 1. Compute the dot product between query and key^T
-            k_t = k.transpose(-2, -1)
-            scores = q @ k_t / math.sqrt(d_key)
-
-            # 2. Apply mask (optional)
-            if mask is not None:
-                scores = scores.masked_fill(mask.logical_not(), float("-inf"))
-
-            # 3. Apply softmax to get attention weights
-            attn = F.softmax(scores, dim=-1)
-
-            # 4. Compute the weighted sum of values
-            out = attn @ v
-
-        return out
+        return torch.nn.functional.scaled_dot_product_attention(q, k, v, mask)
 
 
 class MultiheadAttention(nn.Module):

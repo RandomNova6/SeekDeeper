@@ -1,6 +1,7 @@
-import torch
-from torch import nn
 import math
+
+import torch
+import torch.nn as nn
 
 
 class PositionalEncoding(nn.Module):

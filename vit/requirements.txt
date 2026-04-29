@@ -1,0 +1,7 @@
+torch
+torchvision
+transformers
+huggingface-hub
+python-dotenv
+tqdm
+scikit-learn

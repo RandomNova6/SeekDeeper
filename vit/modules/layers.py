@@ -1,8 +1,8 @@
-from typing import Optional, Tuple, Union
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
 
 
 class ViTPatchEmbeddings(nn.Module):
@@ -115,9 +115,6 @@ class SelfAttention(nn.Module):
         self.value = nn.Linear(hidden_size, self.all_head_size)
         self.dropout = nn.Dropout(dropout)
 
-        # flash attention make GPU go brrrrr but support is only in PyTorch >= 2.0
-        self.flash = hasattr(torch.nn.functional, "scaled_dot_product_attention")
-
     def forward(self, x):
         bsz, nh, nd = (
             x.size(0),
@@ -130,20 +127,13 @@ class SelfAttention(nn.Module):
         k = self.key(x).view(bsz, -1, nh, nd).transpose(1, 2)
         v = self.value(x).view(bsz, -1, nh, nd).transpose(1, 2)
 
-        if self.flash:
-            y = F.scaled_dot_product_attention(
-                q,
-                k,
-                v,
-                dropout_p=self.dropout.p if self.training else 0.0,
-                is_causal=False,
-                scale=None,  # scaled_dot_product_attention will scale automatically even scale is None
-            )
-        else:
-            att = torch.matmul(q, k.transpose(-1, -2)) / math.sqrt(nd)
-            att = F.softmax(att, dim=-1)
-            att = self.dropout(att)
-            y = torch.matmul(att, v) # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+        y = torch.nn.functional.scaled_dot_product_attention(
+            q,
+            k,
+            v,
+            dropout_p=self.dropout.p if self.training else 0.0,
+            is_causal=False,
+        )
 
         # re-assemble all head outputs side by side
         y = y.transpose(1, 2).contiguous().view(bsz, -1, self.all_head_size)
@@ -161,7 +151,7 @@ class ViTLayer(nn.Module):
         dropout,
     ):
         super().__init__()
-        # I use a lot of `ModuleDict` here to simplify the code structure
+        # `ModuleDict` keeps the code compact
         # while ensuring that the pre-trained weights of huggingface transformers can be loaded directly
         self.attention = nn.ModuleDict(
             dict(

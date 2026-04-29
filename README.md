@@ -2,7 +2,7 @@
 [\[📖中文ReadMe\]](./README_zh.md)
 
 ## Motivation
-Official code repositories often include many engineering details, which can be overwhelming for beginners. This repository aims to implement various models with as little code as possible using PyTorch, making it easier for learners to understand and reproduce results. Additionally, most tutorials lack a complete workflow, focusing only on the model without considering data loading and training. This makes it difficult for beginners to apply their knowledge in practice.
+Official code repositories often include extensive engineering details, which may increase the learning burden for beginners. This repository aims to provide minimal PyTorch implementations of representative models, thereby facilitating conceptual understanding and experimental reproduction. In addition, many tutorials focus primarily on model architectures while omitting the complete workflow of data loading, preprocessing, training, and evaluation. Therefore, each model implementation is designed to expose relevant training frameworks, configuration utilities, and data-loading pipelines, so that learners can study the full experimental process in a coherent manner.
 
 ## Models
 <table>
@@ -31,12 +31,12 @@ Official code repositories often include many engineering details, which can be 
     <tr>
       <td>ViT</td>
       <td><a href="https://arxiv.org/pdf/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a></td>
-      <td><a href="https://github.com/huggingface/transformers/blob/main/src/transformers/models/vit/modeling_vit.py">Huggingface ViT implementation</a></td>
+      <td><a href="https://github.com/huggingface/transformers/blob/main/src/transformers/models/vit/modeling_vit.py">Hugging Face ViT implementation</a></td>
     </tr>
     <tr>
       <td>Bert</td>
       <td><a href="https://arxiv.org/pdf/1810.04805">BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding</a></td>
-      <td><a href="https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py">Huggingface Bert implementation</a></td>
+      <td><a href="https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py">Hugging Face Bert implementation</a></td>
     </tr>
     <tr>
       <td>GAN</td>
@@ -66,7 +66,7 @@ For each model, the typical directory structure is as follows:
 ├── checkpoints/
 ├── modules/
 ├── datasets/
-├── images/
+├── assets/
 ├── README.md
 ├── data.py
 ├── config.py
@@ -77,7 +77,7 @@ For each model, the typical directory structure is as follows:
 - **checkpoints/**: Contains pre-trained model weights for direct use in `inference.ipynb`. Sometimes, pre-trained parameters from official repositories are loaded directly.
 - **modules/**: Contains modules necessary for model implementation.
 - **datasets/**: Contains datasets required for training or inference validation, which may sometimes be downloaded to this directory via code.
-- **images/**: Contains images for README.md of this model.
+- **assets/**: Contains original papers and images used by the model README.
 - **README.md**: Introduces the implemented task and describes the implementation details.
 - **data.py**: Defines `Dataset`, `Dataloader`, or data preprocessing.
 - **config.py**: Defines hyperparameters needed for the experiment.

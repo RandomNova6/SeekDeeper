@@ -1,11 +1,6 @@
-import os
-from pathlib import Path
-
 import torch
 
-os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(
-    str(i) for i in range(torch.cuda.device_count())
-)
+from pathlib import Path
 
 torch.manual_seed(3407)
 

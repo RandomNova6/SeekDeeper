@@ -1,0 +1,9 @@
+torch
+datasets
+transformers
+huggingface-hub
+python-dotenv
+regex
+tqdm
+matplotlib
+scikit-learn

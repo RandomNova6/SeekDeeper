@@ -1,11 +1,10 @@
-from math import ceil
-from typing import Sequence
-
 import datasets
-from datasets import DownloadManager
 import torch
-from torch.utils.data import Dataset, DataLoader
+
+from datasets import DownloadManager
+from math import ceil
 from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data import DataLoader, Dataset
 
 import config
 from modules.bpe import BPETokenizer
@@ -134,7 +133,7 @@ def load_data(
     name: str,
     loading_ratio: float = 1,
     num_proc: int = 1,
-    splits: Sequence[str] = None,
+    splits: list[str] | None = None,
 ):
     dispatch = {  # _load_* should return a list of dataloader
         "bookcorpus": _load_bookcorpus,

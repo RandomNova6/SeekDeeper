@@ -1,12 +1,12 @@
 [📖English ReadMe](./README.md)
 ## Introduction
-在这里，我实现了一个 Transformer，并使用其在 IWSLT 2017 数据集上进行了英-德翻译任务（见[此](./train.ipynb)）。在训练模型之后，你可以在[此](./inference.ipynb)加载模型并进行推理。
+在本项目中，我们实现了 Transformer 模型，并将其应用于 IWSLT 2017 数据集上的英德翻译任务（见 [train.ipynb](./train.ipynb)）。模型训练完成后，可在 [inference.ipynb](./inference.ipynb) 中加载模型并进行推理。
 
 ## Model details
 ### [Transformer](./modules/transformer.py)
 Transformer 最初被提出用于解决翻译任务。如果要实现中文到英文的翻译，那么我们称中文为源语言，英文为目标语言。Transformer 的结构如下图所示，源文本的 embedding 与 positional encoding 相加后输入到 Encoder，经过 N 层 Encoder layer 后，输出在 Decoder 的 cross attention 中进行交互。目标文本的 embedding 同样与 positional encoding 相加后输入到 Decoder，Decoder 的输出通常会再经过一个线性层（具体取决于任务要求）。
 <div style="text-align: center;">
-  <img src="./images/transformer.png" alt="Transformer" style="width: 300px; height: auto;">
+  <img src="./assets/transformer.png" alt="Transformer" style="width: 300px; height: auto;">
 </div>
 
 Encoder 和 Decoder 分别使用了两种 mask，`src_mask` 和 `tgt_mask`。`src_mask` 用于遮盖所有的 PAD token，避免它们在 attention 计算中产生影响。`tgt_mask` 除了遮盖所有 PAD token，还要防止模型在进行 next word prediction 时访问未来的词。
@@ -48,7 +48,7 @@ x = layer_norm(x + residual)
 ## [Attention](./modules/layers.py)
 Attention 的计算流程如下：
 <div style="text-align: center;">
-  <img src="./images/attention.png" alt="Attention" style="width: 400px; height: auto;">
+  <img src="./assets/attention.png" alt="Attention" style="width: 400px; height: auto;">
 </div>
 在 Encoder 的 self-attention 中，K、Q、V 均为上一层的输出经过不同线性层得到的。在 Decoder 的 cross-attention 中，K 和 V 来自 Encoder 最后一层的输出，而 Q 是 Decoder 上一层的输出。
 
@@ -104,7 +104,7 @@ x = layer_norm(x + residual)
 
 这相当于在前 $warmup_steps$ 训练步骤中线性增加学习率，然后按步数的平方根倒数比例降低学习率。Transformer base 训练了 100,000 步，在此设置下 $warmup\_ steps = 4000$。学习率的可视化如下所示：
 <div style="text-align: center;">
-  <img src="./images/lr.png" alt="Learning Rate" style="width: 500px; height: auto;">
+  <img src="./assets/lr.png" alt="Learning Rate" style="width: 500px; height: auto;">
 </div>
 
 ### Label Smoothing
@@ -118,11 +118,9 @@ y_{\text{smooth}} = (1 - \epsilon) \cdot y_{\text{one-hot}} + (1-y_{\text{one-ho
 
 其中，$\epsilon$ 是平滑参数，默认为 0.1。$y_{\text{one-hot}}$ 是原始的 one-hot 标签。
 
-你可以在 [config.py](./config.py) 中修改 `eps_ls` 控制 $\epsilon$ 的大小。如果 $\epsilon=0$ 则将
-
-禁用标签平滑，使用交叉熵作为损失函数。
+可在 [config.py](./config.py) 中修改 `eps_ls` 以控制 $\epsilon$ 的取值。当 $\epsilon=0$ 时，标签平滑被禁用，并使用交叉熵作为损失函数。
 
 ## Evaluation
 为了评估机器翻译的效果，本实现遵循了 [Attention is all you need](https://arxiv.org/pdf/1706.03762) 的设置，使用 [BLEU](https://aclanthology.org/P02-1040.pdf) 分数。具体过程是，先使源语言和目标语言经过 transformer 的前向过程，然后使用 greedy decode 的方法从 decoder 输出中选取概率最大的 token 作为预测结果。然后利用 [sacrebleu](https://github.com/mjpost/sacrebleu) 计算 BLEU。
 
-为了提高翻译的效果，实际上也可以使用 beam search 作为 decode 方法，欢迎提交 PR :)。
+为了进一步提高翻译质量，也可以使用 beam search 作为解码方法。

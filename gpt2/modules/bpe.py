@@ -1,17 +1,17 @@
-"""
+r"""
 bpe is short for Byte Pair Encoder. It translates arbitrary utf-8 strings into
 sequences of integers, where each integer represents small chunks of commonly
 occuring characters. This implementation is based on openai's gpt2 encoder.py:
 https://github.com/openai/gpt-2/blob/master/src/encoder.py
 but was mildly modified because the original implementation is a bit confusing.
-I also tried to add as many comments as possible, my own understanding of what's
-going on.
+The comments below document the implementation details used in this version.
 """
 
-from functools import lru_cache
 import json
-from typing import List, Optional, Union
 import regex as re
+
+from functools import lru_cache
+
 
 @lru_cache()
 def bytes_to_unicode():
@@ -81,7 +81,7 @@ class BPETokenizer:
         self.bpe_ranks = dict(zip(bpe_merges, range(len(bpe_merges))))
         # the splitting pattern used for pre-tokenization
         # Should haved added re.IGNORECASE so BPE merges can happen for capitalized versions of contractions <-- original openai comment
-        """
+        r"""
         ok so what is this regex looking for, exactly?
         python re reference: https://docs.python.org/3/library/re.html
         - the vertical bars | is OR, so re.findall will chunkate text as the pieces match, from left to right
@@ -104,7 +104,7 @@ class BPETokenizer:
         self.cache = {}
         self.special_tokens = {"<|endoftext|>"}
 
-    def add_special_tokens(self, new_tokens: List[str]):
+    def add_special_tokens(self, new_tokens: list[str]):
         start_idx = len(self.encoder)
 
         for i, token in enumerate(new_tokens):
@@ -192,7 +192,7 @@ class BPETokenizer:
 
     def encode(
         self,
-        texts: Union[str, List[str]],
+        texts: str | list[str],
     ):
         """strings go in, lists of integers comes out"""
         if not isinstance(texts, list):
@@ -219,7 +219,7 @@ class BPETokenizer:
         return indices
 
     def decode(
-        self, bpe_idx: Union[List[List[int]], List[int]], skip_special_tokens=True
+        self, bpe_idx: list[list[int]] | list[int], skip_special_tokens=True
     ):
         """lists of integers come in, a list of string comes out"""
         if not isinstance(bpe_idx[0], list):

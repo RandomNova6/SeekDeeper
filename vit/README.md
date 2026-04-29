@@ -1,6 +1,6 @@
 [📖中文 ReadMe](./README_zh.md)
 ## Introduction
-This project demonstrates how to load the official pre-trained weights from [Huggingface](https://huggingface.co/google/vit-base-patch16-224) into a Vision Transformer (ViT) model and fine-tune it on the CIFAR10 dataset. The experimental results are replicated from the original paper, [An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/pdf/2010.11929). Note that I have not implemented the complete training process. While the pre-training and fine-tuning setups differ, fully replicating the results is challenging due to the large scale of the ImageNet and JFT-300M datasets.
+This project demonstrates how to load the official pre-trained weights from [Hugging Face](https://huggingface.co/google/vit-base-patch16-224) into a Vision Transformer (ViT) model and fine-tune it on the CIFAR10 dataset. The experimental setting follows the original paper, [An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale](https://arxiv.org/pdf/2010.11929). We do not reproduce the full pre-training procedure; because ImageNet and JFT-300M are large-scale datasets and the pre-training and fine-tuning settings differ substantially, exact reproduction of the full experimental pipeline is beyond the scope of this implementation.
 
 ## Model Details
 ### Key Differences from the Original Transformer
@@ -17,7 +17,7 @@ In ViT, an image (e.g., 224x224) is divided into 14x14 patches of size 16x16. Af
 ViT is conceptually similar to BERT, as both models use a Transformer Encoder for feature extraction and introduce a classification token. This token aggregates the image information when the image is input, and it is typically used for downstream tasks such as image classification.
 
 <center>
-    <img width="100%" src="./images/framework.png" alt=""/>
+    <img width="100%" src="./assets/framework.png" alt=""/>
     <br>
     <div>
       ViT Structure (left) and ViT Encoder (right)
@@ -44,6 +44,5 @@ Following the settings from Appendix B.1.1, the SGD optimizer is used with a mom
 To download the pre-trained ViT model, execute the following command:
 ```bash
 pip install -U huggingface-cli
-export HF_ENDPOINT=https://hf-mirror.com
 huggingface-cli download google/vit-base-patch16-224 --local-dir path/to/pretrained_dir
 ```

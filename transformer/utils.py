@@ -1,12 +1,12 @@
-from typing import Sequence, Union
-
 import torch
 import torch.nn.functional as F
+
+from collections.abc import Sequence
 from torch.optim.optimizer import Optimizer
 
-from modules import make_pad_mask
-import data
 import config
+import data
+from modules import make_pad_mask
 
 
 class LabelSmoothingLoss(torch.nn.Module):
@@ -156,7 +156,7 @@ def beam_search(
 
 @torch.no_grad
 def translate_sentence(
-    sentences: Union[Sequence[str], str],
+    sentences: Sequence[str] | str,
     model,
     src_tokenizer,
     tgt_tokenizer,

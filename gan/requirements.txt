@@ -1,0 +1,6 @@
+torch
+torchvision
+python-dotenv
+tqdm
+matplotlib
+numpy

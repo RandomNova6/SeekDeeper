@@ -1,7 +1,7 @@
 [📖中文 ReadMe](./README_zh.md)
 ## Introduction
 
-In this implementation of GPT-2, I will demonstrate how to pre-train on the [OpenWebText](https://huggingface.co/datasets/Skylion007/openwebtext) dataset, then load the official pre-trained weights from [Hugging Face](https://huggingface.co/openai-community/gpt2/tree/main) into our model, and evaluate directly on the [Children's Book Test (CBT)](https://arxiv.org/pdf/1511.02301) dataset without fine-tuning, replicating the results mentioned in the paper.
+In this GPT-2 implementation, we demonstrate how to pre-train on the [OpenWebText](https://huggingface.co/datasets/Skylion007/openwebtext) dataset, load the official pre-trained weights from [Hugging Face](https://huggingface.co/openai-community/gpt2/tree/main) into our model, and directly evaluate on the [Children's Book Test (CBT)](https://arxiv.org/pdf/1511.02301) dataset without fine-tuning, thereby reproducing the results reported in the paper.
 
 ## Model details
 
@@ -14,7 +14,7 @@ In this implementation of GPT-2, I will demonstrate how to pre-train on the [Ope
 
 BPE is a tokenization method that builds larger subword units by merging the most frequently occurring pairs of characters, reducing the vocabulary size and addressing the issue of rare words. It requires training on a corpus to obtain the vocabulary before encoding and decoding.
 
-My implementation is largely based on Karpathy's [minGPT](https://github.com/karpathy/minGPT/blob/master/mingpt/bpe.py). If you're interested in the BPE training process, you can also refer to his [minbpe](https://github.com/karpathy/minbpe).
+Our implementation is largely based on Karpathy's [minGPT](https://github.com/karpathy/minGPT/blob/master/mingpt/bpe.py). For further details on BPE training, Karpathy's [minbpe](https://github.com/karpathy/minbpe) provides a useful reference.
 
 The BPE used in GPT-2 has some improvements over the version used in GPT-1. Unlike GPT-1, which was based on Unicode characters, GPT-2's BPE operates at the byte level. This means GPT-2 can handle various character sets and special symbols more flexibly, especially non-ASCII characters and emojis, which is particularly helpful for multilingual support and processing non-English text.
 
@@ -26,7 +26,7 @@ The general steps are similar to GPT-1's pre-training.
 
 ## [Inference](./inference.ipynb)
 
-GPT-2 has made significant improvements in text generation capabilities compared to GPT-1. I mainly replicated the evaluation on the CN subset of the Children's Book Test (CBT) mentioned in the paper. This subset requires the model to choose a suitable noun from ten options to fill in a blank in a context paragraph and calculate the prediction accuracy. For this, we need to substitute each option into the blank, calculate the conditional probability of the entire sentence given the candidate word, and select the one with the highest probability as the model's prediction.
+GPT-2 substantially improves text generation capability compared with GPT-1. We reproduce the evaluation on the CN subset of the Children's Book Test (CBT) reported in the paper. This subset requires the model to select an appropriate noun from ten candidates to fill a blank in a contextual paragraph, and prediction accuracy is used as the evaluation metric. To perform this evaluation, each candidate is substituted into the blank, the conditional probability of the full sentence is computed given the candidate word, and the candidate with the highest probability is selected as the model prediction.
 
 ## Appendix
 
@@ -36,6 +36,5 @@ Run the following commands in the terminal:
 
 ```bash
 pip install -U huggingface-cli
-export HF_ENDPOINT=https://hf-mirror.com
 huggingface-cli download openai-community/gpt-2 --local-dir path/to/pretrained_dir
 ```

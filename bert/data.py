@@ -1,12 +1,11 @@
-from dataclasses import dataclass
-from functools import partial
 import random
-from math import ceil
-from typing import List
-
 import datasets
 import nltk
 import torch
+
+from dataclasses import dataclass
+from functools import partial
+from math import ceil
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
 
@@ -49,7 +48,7 @@ class PretrainDataset(Dataset):
         # the last sentence does not have a next sentence
         return len(self.data_source) - 1
 
-    def mask_sentence(self, token_ids: List[int]):
+    def mask_sentence(self, token_ids: list[int]):
         masked_lm_label = []
 
         for i, token_id in enumerate(token_ids):
@@ -126,7 +125,7 @@ class PretrainDataset(Dataset):
         )
 
 
-def collate_fn(batch: List[PretrainDataSample], pad_token_id: int):
+def collate_fn(batch: list[PretrainDataSample], pad_token_id: int):
     input_ids = pad_sequence(
         [item.input_ids for item in batch], padding_value=pad_token_id, batch_first=True
     )

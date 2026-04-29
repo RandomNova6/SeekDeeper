@@ -1,7 +1,8 @@
 import torch
-import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+
 from config import batch_size, dataset_root
 
 mnist_dataset = datasets.MNIST(
