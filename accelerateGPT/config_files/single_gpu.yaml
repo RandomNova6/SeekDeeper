@@ -1,6 +1,6 @@
 compute_environment: LOCAL_MACHINE
 debug: false
-distributed_type: 'no'
+distributed_type: 'NO'
 downcast_bf16: 'no'
 enable_cpu_affinity: false
 gpu_ids: all
