@@ -1,5 +1,6 @@
 import argparse
 import os
+import time
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -283,8 +284,22 @@ def main():
         accelerator,
         use_tensorboard=args.use_tensorboard,
     )
-    trainer.training_loop(restore_iteration=args.restore_iteration)
 
+    if torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats()
+        torch.cuda.empty_cache()
+
+    start_time=time.time()
+    trainer.training_loop(restore_iteration=args.restore_iteration)
+    end_time=time.time()
+
+    peak_memory_byte = torch.cuda.max_memory_allocated()
+    peak_memory_mb = peak_memory_byte / (1024 ** 2)
+
+    accelerator.print(f"Training uses {end_time-start_time} seconds")
+    accelerator.print(f"Training uses {peak_memory_mb} mb")
+
+    accelerator.print(f"Training uses {end_time-start_time} seconds")
 
 if __name__ == "__main__":
     main()
