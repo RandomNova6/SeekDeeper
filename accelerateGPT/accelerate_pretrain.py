@@ -5,10 +5,11 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
-from accelerate import Accelerator
+from accelerate import Accelerator,InitProcessGroupKwargs
 from accelerate.utils import ProjectConfiguration, set_seed
 from accelerate.utils.deepspeed import DummyOptim, DummyScheduler
 from dotenv import load_dotenv
+from datetime import timedelta
 from transformers import get_cosine_schedule_with_warmup
 
 import config
@@ -50,9 +51,12 @@ config_project = ProjectConfiguration(
     total_limit=10,
 )
 
+kwargs = InitProcessGroupKwargs(timeout=timedelta(seconds=1800))
+
 accelerator = Accelerator(
     project_config=config_project,
     gradient_accumulation_steps=config.PretrainConfig.accumulate_grad_batches,
+    kwargs_handlers=[kwargs]
 )
 
 # ---------------------------------------------------------------------------
