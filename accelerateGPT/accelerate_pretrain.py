@@ -55,9 +55,11 @@ kwargs = InitProcessGroupKwargs(timeout=timedelta(seconds=1800))
 
 accelerator = Accelerator(
     project_config=config_project,
-    gradient_accumulation_steps=config.PretrainConfig.accumulate_grad_batches,
     kwargs_handlers=[kwargs]
 )
+
+if accelerator.state.deepspeed_plugin is None:
+    accelerator.gradient_accumulation_steps = config.PretrainConfig.accumulate_grad_batches
 
 # ---------------------------------------------------------------------------
 # 2. Prepare Model, Dataloader, Optimizer and Scheduler
