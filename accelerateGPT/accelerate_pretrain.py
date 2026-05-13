@@ -117,6 +117,8 @@ warmup_steps = int(
 
 # DummyScheduler when DeepSpeed config specifies a scheduler, else cosine
 if ds_config is not None and "scheduler" in ds_config:
+    ds_config["scheduler"]["params"]["warmup_num_steps"] = warmup_steps
+    ds_config["scheduler"]["params"]["total_num_steps"] = total_steps
     scheduler = DummyScheduler(
         optimizer,
         total_num_steps=total_steps,

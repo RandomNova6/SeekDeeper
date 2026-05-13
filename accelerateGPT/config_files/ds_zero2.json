@@ -5,17 +5,17 @@
     "optimizer": {
         "type": "AdamW",
         "params": {
-            "lr": "auto",
-            "weight_decay": "auto"
+            "lr": 2.5e-4,
+            "weight_decay": 0.01
         }
     },
     "scheduler": {
         "type": "WarmupDecayLR",
         "params": {
-            "warmup_min_lr": "auto",
-            "warmup_max_lr": "auto",
-            "warmup_num_steps": "auto",
-            "total_num_steps": "auto"
+            "warmup_min_lr": 0.0,
+            "warmup_max_lr": 2.5e-4,
+            "warmup_num_steps": 0,
+            "total_num_steps": 0
         }
     },
     "zero_optimization": {
@@ -24,11 +24,9 @@
         "allgather_bucket_size": 200000000,
         "overlap_comm": true,
         "reduce_scatter": true,
-        "reduce_bucket_size": "auto",
+        "reduce_bucket_size": 500000000,
         "contiguous_gradients": true
     },
-    "gradient_accumulation_steps": "auto",
-    "gradient_clipping": "auto",
-    "train_batch_size": "auto",
-    "train_micro_batch_size_per_gpu": "auto"
+    "gradient_accumulation_steps": 4,
+    "gradient_clipping": 1.0
 }

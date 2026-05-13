@@ -1,83 +1,124 @@
-# 修复方案: DeepSpeed 配置冲突
+# 修复方案: DeepSpeed `auto` 值无法解析
 
-## 错误原因
+## 错误日志
 
-当 `zero2.yaml` 中指定了 `deepspeed_config_file` 时，accelerate 要求以下配置项必须在 **DeepSpeed 自身的配置文件**（`ds_zero2.json`）中设置，而不能出现在 accelerate 的配置（YAML）或 `Accelerator()` 构造函数参数中：
+```
+ValueError: Can't find `model.config` entry, therefore it's not possible to automatically
+fill out the following `auto` entries in the DeepSpeed config file:
+['zero_optimization.reduce_bucket_size'].
+```
 
-- `gradient_accumulation_steps`
-- `gradient_clipping`
-- `zero_stage` / offload 相关
-- `mixed_precision`
+## 根本原因
 
-当前代码在两个地方违反了这一规则：
+自定义 `GPT` 模型 (`modules/gpt.py`) 没有 `model.config` 属性（它不是 HuggingFace `PreTrainedModel`），而 `ds_zero2.json` 中存在大量 `"auto"` 值。
 
-| 位置 | 问题 |
+当 `accelerator.prepare()` 被调用时，accelerate 尝试通过 `model.config` 自动推导这些 `"auto"` 值 → 找不到 → 抛出 `ValueError`。
+
+`ds_zero2.json` 中所有 `"auto"` 字段：
+
+| 字段 | 需要改为 |
 |---|---|
-| `accelerate_pretrain.py:58` | `Accelerator()` 构造函数传入了 `gradient_accumulation_steps` |
-| `zero2.yaml:11` | 设置了 `mixed_precision: fp16`（已被 `ds_zero2.json` 中的 `bf16` 覆盖） |
+| `optimizer.params.lr` | 已知静态值 |
+| `optimizer.params.weight_decay` | 已知静态值 |
+| `scheduler.params.warmup_min_lr` | 已知静态值 |
+| `scheduler.params.warmup_max_lr` | 已知静态值 |
+| `scheduler.params.warmup_num_steps` | **运行时动态计算** |
+| `scheduler.params.total_num_steps` | **运行时动态计算** |
+| `zero_optimization.reduce_bucket_size` | 已知常量 |
+| `gradient_accumulation_steps` | 已知静态值 |
+| `gradient_clipping` | 已知静态值 |
+| `train_batch_size` | 可移除（有显式 gradient_accumulation_steps 时不需要） |
+| `train_micro_batch_size_per_gpu` | 可移除 |
 
 ---
 
-## 修复方案
+## 修复一：`ds_zero2.json` — 将所有 `"auto"` 替换为具体值
 
-### 1. 修改 `accelerate_pretrain.py`
+```json
+{
+    "fp16": {
+        "enabled": true
+    },
+    "optimizer": {
+        "type": "AdamW",
+        "params": {
+            "lr": 2.5e-4,
+            "weight_decay": 0.01
+        }
+    },
+    "scheduler": {
+        "type": "WarmupDecayLR",
+        "params": {
+            "warmup_min_lr": 0.0,
+            "warmup_max_lr": 2.5e-4,
+            "warmup_num_steps": 0,
+            "total_num_steps": 0
+        }
+    },
+    "zero_optimization": {
+        "stage": 2,
+        "allgather_partitions": true,
+        "allgather_bucket_size": 200000000,
+        "overlap_comm": true,
+        "reduce_scatter": true,
+        "reduce_bucket_size": 500000000,
+        "contiguous_gradients": true
+    },
+    "gradient_accumulation_steps": 4,
+    "gradient_clipping": 1.0
+}
+```
 
-在 `Accelerator()` 构造函数中去掉 `gradient_accumulation_steps` 参数，改为在构造完成后根据是否使用 DeepSpeed 分别处理：
+**说明：**
+- `lr`、`weight_decay`、`warmup_min_lr`、`warmup_max_lr`：来自 `config.py` 中的静态值
+- `reduce_bucket_size`：设为 `5e8`（DeepSpeed ZeRO-2 的常用默认值）
+- `gradient_accumulation_steps`：来自 `config.PretrainConfig.accumulate_grad_batches`（值为 4）
+- `gradient_clipping`：来自 `config.clip`（值为 1）
+- `warmup_num_steps` / `total_num_steps`：先填占位值 `0`，运行时由代码动态注入（见修复二）
+- 移除了 `train_batch_size` 和 `train_micro_batch_size_per_gpu`（有显式 `gradient_accumulation_steps` 时不需要）
+
+---
+
+## 修复二：`accelerate_pretrain.py` — 动态注入 `warmup_num_steps` / `total_num_steps`
+
+这两个值是运行时动态计算的（依赖 `loading_ratio`、dataloader 长度等），无法写死在 JSON 里。需要在代码中计算后注入到 DeepSpeed 配置。
+
+**当前代码结构（第 83-132 行，仅保留轮廓）：**
 
 ```python
-# 修改前 (第 56-60 行)
-accelerator = Accelerator(
-    project_config=config_project,
-    gradient_accumulation_steps=config.PretrainConfig.accumulate_grad_batches,
-    kwargs_handlers=[kwargs]
-)
+# Line 83-86: 获取 ds_config
+if accelerator.state.deepspeed_plugin is not None:
+    ds_config = accelerator.state.deepspeed_plugin.deepspeed_config
+else:
+    ds_config = None
 
-# 修改后
-accelerator = Accelerator(
-    project_config=config_project,
-    kwargs_handlers=[kwargs]
-)
+# Line 91-102: 创建 optimizer
 
-# 非 DeepSpeed 模式下，手动设置 gradient_accumulation_steps
-# DeepSpeed 模式下，该值由 ds_zero2.json 中的配置自动决定
-if accelerator.state.deepspeed_plugin is None:
-    accelerator.gradient_accumulation_steps = config.PretrainConfig.accumulate_grad_batches
+# Line 104-114: 计算 total_steps 和 warmup_steps
+
+# Line 117-128: 创建 scheduler
+
+# Line 130-132: accelerator.prepare()
 ```
 
-**为什么这样改：**
-- DeepSpeed 模式下，`gradient_accumulation_steps` 由 `ds_zero2.json` 中的 `"gradient_accumulation_steps": "auto"` 控制，accelerate 会自动解析
-- 非 DeepSpeed 模式（single_gpu / multi_gpu）下，手动设置该属性以保证 `total_steps`、`warmup_steps` 等后续计算正确
+**问题：** `warmup_num_steps` 和 `total_num_steps` 在 `prepare()` 时就要被 DeepSpeed 使用，但计算发生在 optimizer 之后、scheduler 之前。只需在创建 scheduler 之前，把计算好的值注入 `ds_config`。
 
----
+**修改：在第 114 行后（计算完 warmup_steps 后）插入一段注入逻辑：**
 
-### 2. 修改 `config_files/zero2.yaml`
-
-去掉 `mixed_precision` 行，因为混合精度已在 `ds_zero2.json` 中通过 `"bf16": {"enabled": true}` 配置：
-
-```yaml
-# 修改前
-mixed_precision: fp16
-
-# 修改后
-# 删除此行（由 ds_zero2.json 中的 bf16 配置接管）
-```
-
-修改后的 `zero2.yaml` 第 11 行附近：
-
-```yaml
-main_training_function: main
-# mixed_precision 已移入 ds_zero2.json
-num_machines: 1
+```python
+# 在 Line 114 之后插入
+# 将运行时计算的值注入 DeepSpeed 配置，替代 JSON 中的占位值
+if ds_config is not None and "scheduler" in ds_config:
+    ds_config["scheduler"]["params"]["warmup_num_steps"] = warmup_steps
+    ds_config["scheduler"]["params"]["total_num_steps"] = total_steps
 ```
 
 ---
 
 ## 改动总览
 
-| 文件 | 改动内容 |
+| 文件 | 改动 |
 |---|---|
-| `accelerate_pretrain.py` | 从 `Accelerator()` 构造中移除 `gradient_accumulation_steps`，改为在非 DeepSpeed 下手动赋值 |
-| `config_files/zero2.yaml` | 删除 `mixed_precision: fp16` |
-| `config_files/ds_zero2.json` | 无需修改（已正确配置 `gradient_accumulation_steps`、`gradient_clipping`、`bf16`） |
-| `config_files/single_gpu.yaml` | 无需修改（不使用 deepspeed，且其 `mixed_precision: fp16` 不受影响） |
-| `config_files/multi_gpu.yaml` | 无需修改（同上） |
+| `config_files/ds_zero2.json` | 所有 `"auto"` → 具体值（静态值直接用 config.py 中的定义，动态值用 `0` 占位） |
+| `accelerate_pretrain.py` | 在 `prepare()` 之前，将运行时计算的 `warmup_steps` / `total_steps` 注入 `ds_config` |
+| `config_files/zero2.yaml` | 删除 `mixed_precision: fp16`（上一轮修复，由 ds_zero2.json 中的 `fp16.enabled` 接管） |
